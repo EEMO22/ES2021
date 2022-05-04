@@ -1,0 +1,117 @@
+
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <title>로또추첨기</title>
+  <style>
+    .ball {
+      display: inline-block;
+      border: 1px solid black;
+      border-radius: 20px;
+      width: 40px;
+      height: 40px;
+      line-height: 40px;
+      font-size: 20px;
+      text-align: center;
+      margin-right: 20px;
+    }
+  </style>
+</head>
+
+<body>
+<div id="result">추첨 결과는? </div>
+<div id="bonus">보너스: </div>
+<script>
+  const candidate = Array(45).fill().map((v, i) => i + 1)
+
+  //  Fisher-Yates shuffle
+  //  배열 내 요소가 완전히 섞인 새로운 배열을 반환하는 방법
+  const shuffle = [];
+  while (candidate.length > 0) {
+    const random = Math.floor(Math.random() * candidate.length) //  무작위 인덱스 뽑기
+    const spliceArray = candidate.splice(random, 1);  //  뽑은 값은 배열에 들어 있음
+    const value = spliceArray[0]; //  배열에 들어 있는 값을 꺼내어
+    shuffle.push(value);  //  shuffle 배열에 넣기
+  }
+  console.log(shuffle);
+  const winBalls = shuffle.slice(0, 6).sort((a, b) => a - b);
+  const bonus = shuffle[6];
+  console.log(winBalls, bonus);
+
+  //  array.slice(), array.splice()
+  //  slice -> 새로운 배열 생성, 잘라내는 것만 가능 ([시작, [끝]])
+  //  splice -> 원본 배열 수정, 추출이나 삽입 가능 (시작, [요소의 수, [추가할 요소]])
+
+  //  array.sort()
+  //  array.sort(a, b) => {
+  //    return
+  //  };
+  //  return 값에 따라 원본 배열을 정렬하여 나타낸다.
+
+  //  가능한 한 원본 유지하는 애들을 쓰는 게 편리함.
+
+  //  array.slice() 하여 원본과 같은 배열을 복사한 뒤 여기에 sort
+  //  array.slice().sort();
+  //  함수(a, b) 가 0보다 작은 경우(-1) a를 b보다 낮은 색인으로 정렬
+  //  0인 경우 서로에 대해 변경하지 않고 다른 요소에 대해 정렬
+  //  0보다 큰 경우(1) b를 a보다 낮은 인덱스로 정렬
+  //  수 또는 Date 비교 시,
+  //  sort((a, b) => a - b) -> 오름차순
+  //  sort((a, b) => b - a) -> 내림차순
+  //  문자열 비교 시에는,
+  //  array.sort((a, b) => a[0].charCodeAt() - b[0].charCodeAt());  -> 오름차순
+  //  array.sort((a, b) => b[0].charCodeAt() - a[0].charCodeAt());  -> 내림차순
+  //  두 번째 글자들 까지도 비교할 경우,
+  //  array.sort((a, b) => a.localeCompare(b)); -> 사전 순으로 정렬
+  //  array.sort((a, b) => b.localeCompare(a)); -> 사전 역순으로 정렬
+  //  (String.localCompare()) -> 정렬 순서에 따라 1, -1 반환
+  //  다른 자료형끼리의 정렬도 가능하긴 하다.
+
+  const $result = document.querySelector('#result');
+
+  //  setTimeout() 함수 전체가 공 뽑을 때마다 반복되는 것을 제거
+
+  // setTimeout(() => {
+  //   const $ball = document.createElement('div');
+  //   $ball.className = 'ball'; //  class 이름 지정
+  //   $ball.textContent = winBalls[0];
+  //   $result.appendChild($ball);
+  // }, 1000);
+  //  ...
+  //  ...
+  
+  const drawBall = (number, $parent) => { //  매개변수를 이용해 달라지는 부분만 따로 줌
+    const $ball = document.createElement('div');
+    $ball.className = 'ball'; //  class 이름 지정
+    $ball.textContent = number;
+    $parent.appendChild($ball);
+  };
+
+  //  [0, 1, 2, 3, 4, 5] -> [1000, 2000, 3000, 4000, 5000. 6000]
+  //  이거 array.map((e, i) => { return (e + 1) * 1000 }) 이잖아
+  //  -> map에 익숙해지면 반복문 조건 더 쉽게 설정 가능
+  for (let i = 0; i < winBalls.length; i++) {
+    setTimeout(() => {
+      drawBall(winBalls[i], $result);
+    }, (i + 1) * 1000);
+  }
+
+  /*
+    위의 for문에서 let -> var 로 바꾸면 공들은 undefined를 가지게 되고,
+    [i]는 계속 6이 찍히게 된다.
+
+    -> closure 문제!!
+  */
+
+
+  
+  const $bonus = document.querySelector('#bonus');
+  setTimeout(() => {
+    drawBall(bonus, $bonus);
+  }, 7000);
+
+  //  JS의 setTimeout은 정확하지 않다.
+  //  다른 작업 수행 후 한가할 때 타이머 작동시킴
+
+</script>
+</body>

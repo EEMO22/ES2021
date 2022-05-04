@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>숫자야구</title>
+</head>
+<body>
+  <form id="form">
+    <!-- input은 단독 사용 가능, 그러나 html 5 표준은 input, 특히 버튼 달린
+         input은 form으로 감싸는 것.-->
+    <input type="text" id="input">
+    <button>확인</button>
+  </form>
+  <div id="logs"></div>
+
+  <script>
+    //  무작위 수 생성
+    //  Math.random은 0 ~ 0.99999... 사이의 수를 (거의)무작위로 생성
+    //  0 <= Math.random < 1 이므로, 우리가 원하는 1 ~ 9를 뽑으려면,
+    //  양 변에 9를 곱하여 0 <= Math.random < 9
+    //  거기에 1을 더하여 1 <= Math.random < 10 으로 생성
+    //  그리고 Math.floor 하여 소숫점 내림
+    //    (올림: Math.ceil(), 반올림: Math.round())
+    //    (보안이 필요한 작업 랜덤 수 생성: window.crypto.getRandomValues())
+    const $input = document.querySelector('#input');
+    const $form = document.querySelector('#form');
+    const $logs = document.querySelector('#logs');
+
+    const numbers = [];
+    //  값의 배열만 필요하면 [] -> 배열
+    //  값에 속성 이름을 붙여 구분해야 할 때 {} -> 객체 리터럴
+    for (let n = 0; n < 9; n += 1) {
+      numbers.push(n + 1);
+    }
+    const answer = [];
+    for (let n = 0; n < 4; n += 1) {  //  네 번 반복
+      const index = Math.floor(Math.random() * (numbers.length));  //  0 ~ 8 정수(index이므로)
+      //  splice할 때마다 원본 배열이 줄어들기 때문에, 계속 8번 인덱스까지 돌리면
+      //  없는 자리에서 수를 뽑아서 undefined가 나와버림. 그래서 같이 줄여야함
+      //  근데 numbers.length 써서 그냥 두면 됨
+      answer.push(numbers[index]);
+      numbers.splice(index, 1); 
+      //  splice(타겟 index, 지우려는 개수 (0이면 삭제X)), 추가할 요소1, 2, ...)
+      //  추가 요소 안 쓰면 삭제만
+    }
+    console.log(answer);
+
+    const tries = [];
+
+    function checkInput(input) {
+      if (input.length !== 4) {
+        return alert('4자리 숫자를 입력해 주세요.');
+      }
+      if (new Set(input).size !== 4) {  //  Set -> 배열과 유사하나 중복 허용 X 순서 상관 X
+        return alert('중복되지 않게 입력해 주세요.');
+      }
+      if (tries.includes(input)) {  //  array.includes() 배열에 해당 값이 들어있는지 판별
+        return alert('이미 시도한 값입니다.');
+      }
+      return true;
+    } 
+
+    //  html이 제공하는 validation은 요즘 잘 안 쓴다. 디자인 바꾸기 어려워서.
+    //  alert 같은 브라우저 제공 알림도 잘 안씀. (그냥 div 조정 하는 듯)
+
+    $form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      //  form은 submit될 때 화면 새로고침이 일어난다(기본 동작)
+      //  새로고침되면 저장되지 않은 정보 다 날아가기 때문에,
+      //  기본 동작을 막아준다. (대표적으로 form, a 태그)
+      const value = $input.value;
+      $input.value = '';
+
+      //  답이 형식에 맞는지 검사
+      if (!checkInput(value)) {
+        return;
+      }
+
+      //  홈런인지 검사
+      if (answer.join('') === value) {
+        //  array.join() -> ()안의 값 기준으로 배열을 문자열로 합친다.
+        //  arr = [1, 2, 3, 4] 에서 arr.join(':') 하면 1:2:3:4. 빈 문자열 '' 을 주면 1234
+        //  기본 값은 ',' 임.
+        //  이와 반대로 String.split() 하면 ()안의 값 기준으로 배열화 시킨다.
+        //  '1234'.split() 은 ["1234"]가 된다. ''을 주면 ["1", "2", "3", "4"] 가 된다
+        //  '1234'.split(2) 를 하면 ["1", "34"]가 된다. 2를 기준으로 나눠버림.
+
+        $logs.textContent = '홈런!';
+        return;
+      }
+
+      //  시도 횟수 검사
+      if (tries.length >= 9) {
+        //  9회가 누적된 상황에서 틀리면 바로 패배하도록
+
+        const message = document.createTextNode(`패배! 정답은 ${answer.join('')}`);
+        //  html에 글자 추가할때 여러 방법이 있는데, $logs.textContent = $logs.textCOntent + '글자';
+        //  textContent는 텍스트만 전송하므로 \n, <br />같은 방법은 안 먹힘. 그렇다고 innerHTML을 쓸 수는 없지
+        //  태그를 작성하고 거기에 내용 넣는 것과 달리, JS에서 html을 붙여나갈 수도 있음.
+        //  $logs.append(document.createTextNode('글자')); 를 하면 노드가 생겨서 logs에 추가된다.
+        //  줄바꿈 하고 싶으면 $logs.append(createElement('br')); 하면 br태그가 생성되어 삽입됨.
+
+        $logs.appendChild(message);
+        //  append -> JS 함수. 문자열 자체, Node 여러 개 받을 수 있음. 값 리턴 X
+        //  실제로는 다 append 사용함.
+        //  appendChild -> DOM메서드. Node 하나만 만 받을 수 있음. return값 있음.
+        //  prepend, prependChild -> append들은 선택 요소 막내로, 얘는 첫번째 자식으로 추가.
+
+        return;
+      }
+
+      //  몇 스트라이크 몇 볼인지 검사
+      let strike = 0;
+      let ball = 0;
+      for (let i = 0; i < answer.length; i++) {
+        const index = value.indexOf(answer[i]);
+        //  answer의 i 번째 글자는 value 의 몇 번째 index에서 처음 발견되나?
+        //  발견되지 않으면 -1을 반환
+        //  includes의 상위호환(자료형도 같아야 함)
+
+        if (index > -1) { //  일치하는 숫자 발견
+          if (index === i) {  //  자릿수도 같을 때
+            strike += 1;
+          } else {  //  숫자만 같을 때
+            ball += 1;
+          }
+        }
+      }
+      $logs.append(`${value}: ${strike}스트라이크 ${ball} 볼`, document.createElement('br'));
+      tries.push(value);
+      // console.log('submit', event);
+      //  form은 event객체가 target[n] 으로 하위 input, button 등을 가지고 있음
+      //  event.target[n] 배열처럼 접근 가능
+    })
+  </script>
+</body>
+</html>

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>가위바위보</title>
+  <style>
+    #computer {
+      width: 142px;
+      height: 200px;
+    }
+  </style>
+</head>
+
+<body>
+<div id="computer"></div>
+  <div>
+    <button id="scissors" class="btn">가위</button>
+    <button id="rock" class="btn">바위</button>
+    <button id="paper" class="btn">보</button>
+  </div>
+<div id="score">0</div>
+
+<script>
+  const $computer = document.querySelector('#computer');
+  const $score = document.querySelector('#score');
+  const $rock = document.querySelector('#rock');
+  const $scissors = document.querySelector('#scissors');
+  const $paper = document.querySelector('#paper');
+  const IMG_URL = './rsp.png';
+
+  //  이미지 스프라이트
+  //  과거 이미지 여러 개를 요청하면 속도도 느리고 제대로 표시되지 않았음
+  //  하나의 이미지에 이미지들을 합쳐놓고, 표시 위치를 다르게 하여 보여주는 방식
+  $computer.style.background = `url(${IMG_URL}) -464px 0`;
+  $computer.style.backgroundSize = 'auto 200px';
+
+  //  가위 바위 보의 이미지 상 X 좌표를 조절해야 하는데
+  //  이미지 하나에서 3개 변수 조절할 수 없으므로 묶어서 객체화
+  const rspX = {
+    scissors: '0',  //  가위
+    rock: '-220px', //  바위
+    paper: '-440px',  //  보
+  };
+
+  //  setInterval() -> 일정 시간마다 반복
+
+  let computerChoice = 'scissors';
+  const changeComputerHand = () => {
+    if (computerChoice === 'scissors') {  //  가위면
+      computerChoice = 'rock';
+    } else if (computerChoice === 'rock') { //  바위면
+      computerChoice = 'paper';
+    } else if (computerChoice === 'paper') {  //  보
+      //  else 문으로 처리해도 되지만(논리적으로는 당연히 나머지 하나),
+      //  오타 등이 있는 경우에 의도하지 않게 작동할 떄 있음 -> 명확하게
+
+      //  ** 승리 조건 등에서는 score === 3 보다 score >= 3 처럼 표시하자.
+      //  버그 등의 예외 가능성을 고려해야 한다. 범위를 더 넓게 잡거나, 좁게 잡거나.
+      //  점수가 1점씩이 아니고 뭔가 이상해서 10점 올라버리면... 그래도 승리는 승리니까.
+      computerChoice = 'scissors';
+    }
+    
+    //  ** 헷갈리는 부분!!!
+    //  rspX.computerChice (X) -> .computerChoice 는 문자열 = rspX["computerChoice"]
+    //  [] 안에는 값이 들어감
+    $computer.style.background = `url(${IMG_URL}) ${rspX[computerChoice]} 0`;
+    $computer.style.backgroundSize = 'auto 200px';
+    //  위치를 바꿀 때, size도 한 번 더 불러줘야 리셋되지 않음.  
+  }
+  // setInterval(changeComputerHand, 50);   ->  하단에서 타이머 취소를 위해 변수에 저장토록 수정
+
+
+  //  setInterval()은, setTimeout() 과 마찬가지로 정확한 반복주기를 보장하지 않는다. 
+  //  다른거 다 하고 시간 재서 수행. 대부분의 경우 쓸만 하기 때문에 얘네를 쓴다.
+
+  //  setInterval() 은 setTimeout()의 재귀 호출로 나타낼 수도 있다.
+  /*
+    const changeComputerHand = () => {
+      if (computerChoice === 'scissors') {
+        computerChoice = 'rock';
+      } else if (computerChoice === 'rock') {
+        computerChoice = 'paper';
+      } else if (computerChoice === 'paper') {
+        computerChoice = 'scissors';
+      }
+      $computer.style.background = `url(${IMG_URL}) ${rspX[computerChoice]} 0`;
+      $computer.style.backgroundSize = 'auto 200px';
+      setTimeout(changeComputerHand, 50);   <- 재귀 호출. 자기 자신을 호출
+    }
+    setTimeout(changeComputerHand, 50);
+  */
+
+
+  //  setTimeout() -> 이전 코드가 다 실행되고 나서 시간을 잰다.
+  //    지정한 간격보다 시간이 더 필요한 경우 그거 다 끝내고서야 setTimeout이 호출됨
+  //    사용: 지정한 시간 이상만 벌어지면 좋겠다. 어쨌든 반복만 한다.
+
+  //  setInterval() -> 이전 코드가 다 실행되지 않더라도 지정한 시간에 맞춰 호출된다.
+  //    아직 처리 다 못한 경우, 이벤트를 큐에 저장하고 패스.
+  //    사용: 아 일단 처리 다 못하더라도, 최대한 지정 시간에 맞춰서 반복시켜야 겠다.
+
+  
+  
+  //  타이머 일시정지
+
+  //  setInterval(), setTimeout() 타이머는 각각 타이머 아이디를 리턴한다.
+  //  예전 타이머의 아이디로 지금의 타이머를 정지시킬 수는 없다.
+  //    -> 타이머가 생성될 때마다 변수에 저장해두고 해당 타이머를 취소시키는 데에 사용한다.
+  //  setTimeout 에 인수로 넣은 함수가 실행되기 전에 clearTimeout을 호출해야 한다.
+  //    (폭탄 터지기 전에 해체해야 하는 것처럼)
+
+  let intervalId = setInterval(changeComputerHand, 50); //  리턴되는 아이디를 변수에 저장
+  let clickable = true; //  버그 수정 해결방안 3. 플래그 변수를 이용한다.
+
+  
+  //  승패 판정을 if문 9개의 조합으로 나타낼 수도 있음...
+  //  개복잡하기 때문에, 혹시 규칙 있을 수도 있으니 각 문자열을 숫자로 나타내보자.
+  const scoreTable = {
+    rock: 0,
+    scissors: 1,
+    paper: -1,
+  }
+  //  이제 승부는 숫자값의 차이로 나타내 볼 수도 있게 되었다.
+
+  let score = 0;  //  점수
+
+  const clickButton = () => {
+    if (clickable) {  //  clickable이 true인 경우에만 실행.
+      clearInterval(intervalId);  //  해당 타이머 취소   
+      clickable = false;
+
+      //  점수 계산 및 화면 표시 영역
+
+      //  event.target.id, event.target.className, event.target.textContent 등으로 
+      //  내가 누른 버튼과 그 값을 알아낸다.
+      const myChoice = event.target.textContent === '바위'
+        ? 'rock'
+        : event.target.textContent === '가위'
+          ? 'scissors'
+          : 'paper';
+      const myScore = scoreTable[myChoice];
+      const computerScore = scoreTable[computerChoice];
+      const diff = myScore - computerScore;
+
+      let message;
+
+      //  각각 지정된 숫자 0, 1, -1 간의 차를 구하면 어느정도 공통점이 보이는데,
+      //  이를 이용해 승부를 판별할 수 있다.
+
+      //  조건 줄이는 건 좋은데, 이게 뭔지 몰라보게 될 수도 있음.
+      //  2, -1은 승리조건, -2, 1은 패배조건. 점수표 참고. 
+      //  처럼 주석 달아줘야 할 수도 있음.
+      if ([2, -1].includes(diff)) {
+        score += 1;
+        message = '승리';
+      } else if ([-2, 1].includes(diff)) {
+        score -= 1;
+        message = '패배';
+      } else {
+        message = '무승부';
+      }
+      $score.textContent = `${message} 총: ${score}점`;
+
+      //  diff === '고양이' || diff === '강아지' || diff === '사자' || diff === '거북이'
+      //  이런 조건은 길이도 너무 길고 중복되는 느낌에다가 뭔가 알아보기 힘든 경우 있음
+      //  ['고양이', '강아지', '사자', '거북이'].includes(diff) -> 앞에 거에 diff가 있으면...
+      //  로 바꿔 쓸 수 있다. 
+      //  indludes()는 true 또는 false를 리턴하기 때문.
+      //  .indexOf(diff) > -1 도 같은 기능.
+
+      setTimeout(() => {  //  타이머 다시 시작
+        clickable = true;
+        intervalId = setInterval(changeComputerHand, 50);
+      }, 1000);
+    }
+  }
+  $rock.addEventListener('click', clickButton);
+  $scissors.addEventListener('click', clickButton);
+  $paper.addEventListener('click', clickButton);
+
+  //  ** 버그 발생
+
+  /* 
+    초기 인터벌 일시정지 -> 재시작 코드인
+
+    const clickButton = () => {
+      clearInterval(intervalId);
+      setTimeout(() => {
+        intervalId = setInterval(changeComputerHand, 50);
+      }, 1000);
+    }
+    $rock.addEventListener('click', clickButton);
+    $scissors.addEventListener('click', clickButton);
+    $paper.addEventListener('click', clickButton);
+
+    에서,
+  */
+
+  //  clickbutton 5번 연달아 호출(광클릭) 시, 
+  //  인터벌 1번, 2번, 3번, 4번, 5번이 setTimeout에 의해 호출
+  //  그런에 intervalId에는 5번 인터벌의 아이디만 남아있게 된다.(덮어씌워지므로) 
+  //  이제 사용자가 1초 이상의 시간 뒤에 버튼을 다시 눌렀을 때, 5번의 인터벌만 취소됨. 
+  //  1, 2, 3, 4번은 계속 손 돌리고 있고(설정값보다 더 빠르게 순환),
+  //  버튼 다시 눌러봐도 멈추지 않음.
+
+
+  //  해결 1.
+  //  setTimeout() 내부에 clearInterval을 한 번 더 호출하여,
+  //  이미 실행중인 인터벌을 제거한 뒤, 다음 인터벌을 호출하도록 한다.
+
+
+  //  해결 2.
+  //  이벤트리스너를 일시적으로 떼어낸다.
+  //  removeEventListener()
+
+  /*
+    const clickButton = () => {
+      clearInterval(intervalId);
+
+  이벤트 리스너 제거
+
+      $rock.removeEventListener('click', clickButton);
+      $scissors.removeEventListener('click', clickButton);
+      $paper.removeEventListener('click', clickButton);
+
+      //  점수 계산 및 화면 표시 영역
+      setTimeout(() => {
+        clearInterval(intervalId);
+        intervalId = setInterval(changeComputerHand, 50);
+
+  이벤트 리스너 다시 부착
+
+        $rock.addEventListener('click', clickButton);
+        $scissors.addEventListener('click', clickButton);
+        $paper.addEventListener('click', clickButton);
+
+      }, 1000);
+    }
+    $rock.addEventListener('click', clickButton);
+    $scissors.addEventListener('click', clickButton);
+    $paper.addEventListener('click', clickButton);
+  */
+  //  근데 이벤트 리스너를 떼었다 붙였다 하는 건 문제가 생길 가능성이 있어서 비추
+
+
+  //  ** 사람들이 자주 실수하는 부분
+  /*
+    const fun = (값) = () => {
+      console.log('고차함수입니다.', 값);
+    }
+    태그.addEventListener('click', fun(1));
+
+    일 때,
+    태그. removeEventListener('click', fun(1));
+
+    한다고 해서 이벤트리스너가 제거되는 것이 아니다.
+    동일한 함수에 접근해야 하는데, add와 remove로 접근하는 fun(1)은 서로 같지 않다!
+
+    왜냐하면,
+    fun(1) === fun(1) //  false
+    
+    이기 때문이다.
+    함수, 배열 등 객체들은 참조하는 곳이 다르기 때문에 서로 같지 않다.
+
+    {} === {} //  false
+    [] === [] //  false
+    (() => {}) === (() => {}) //  false
+
+    이를 해결하기 위해서는 변수에 객체를 저장해 사용해야 한다.
+
+    const func1 = fun(1);
+    func1 === func1 //  true
+
+    이제는 같은 이벤트리스너에 접근하여 조절할 수 있다.
+  */
+
+  //  해결 3.
+  //  플래그변수를 이용하여 해당 변수가 참일 경우에만 코드가 실행되도록 한다.
+</script>
+</body>
+</html>

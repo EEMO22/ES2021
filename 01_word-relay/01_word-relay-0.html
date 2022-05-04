@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>끝말잇기</title>
+</head>
+<body>
+  <div><span id="order">1</span>번째 참가자</div>
+  <div>제시어: <span id="word"></span></div>
+  <input type="text">
+  <button>입력</button>
+
+  <script>
+    const number = parseInt(prompt('몇 명이 참가하나요?'), 10);
+    //  prompt -> 사용자로부터 입력받음
+
+    // alert(number);
+    //  alert -> 경고 메시지 출력
+    
+    // const yesOrNo = confirm(number + '명이 맞나요?');
+    //  confirm -> 사용자 확인 요구
+    //  이 친구들 요즘은 잘 안씀. div태그 등으로 직접 입력받음.
+
+
+
+    //  document.querySelector는 가장 먼저 나오는 친구를 선택함
+    //  그래서 span 따위로는 가장 위 녀석만 선택 가능 -> id, class등 활용
+    //  JS는 id를 고유한 값으로 친다. html상에서 각각 한 번만 등장 가능
+
+    //  여러 태그를 선택하고 싶으면 클래스를 추가할 것.(띄어쓰기로)
+    /*
+    <button class="target">입력</button>
+    <button class="btn">버튼 2</button>
+    <button class="btn target">버튼 3</button>
+    */
+
+    //  태그와 태그 사이 공백 -> 자손 태그를 의미 <div span> -> div 자손 span
+    //  태그와 태그 사이   >  -> 자식 태그를 의미 <div>span> -> div 자식 span
+    //  자식: 바로 하위 태그만 해당, 자손: 하위 모든 중첩 해당
+
+    //  선택자가 너무 길어지는 경우, 아이디를 줘서 선택하는게 편함.
+    
+
+
+
+    // document.querySelector('input').addEventListener('input', function(event) {
+    //   console.log('글자 입력', event.target.value);
+    // });
+    
+    //  callback함수 -> 어떤 동작 후 연이어 호출되는 함수
+
+    // document.querySelector('input').addEventListener('input', () => {
+    //   console.log('글자 입력');
+    // });
+
+    //  처럼 화살표 함수로로 처리할 수도 있음.
+    //  this 의 범위가 다르긴 하지만 이런 경우 대체 가능
+
+
+
+    // const onClick = function() {
+    //   console.log('버튼 클릭');
+    // }
+    // document.querySelector('button').addEventListener('click', onClick);
+    
+    //  onClick() 이 아님에 주의할 것. 자리를 잘 봐야 한다.\
+    //  함수 자리에는 함수를 넣어야지.
+    //  onClick이 실행하는 console.log는 return undefined가 생략된 것,
+    //  onClick() = undefined임
+
+    //  여러 번 재사용 될 함수는 변수명을 붙여서 변수로 빼 주는게 좋다.
+    //  그러나 한 번만 쓰는 경우에는 익명함수 상태로 그냥 한 줄에 써도 ㅇㅋ
+
+      const $button = document.querySelector('button');
+      const $input = document.querySelector('input');
+      const $word = document.querySelector('#word');
+      const $order = document.querySelector('#order');
+      //  $가 붙은 변수명 -> JS값이 아닌 html 선택자임을 표시(커스텀 룰임)
+      let word; //  제시어
+      let newWord;  //  새로 입력한 단어
+
+      const onClickButton = () => {
+        //  제시어가 비어 있거나, 또는 제시어가 올바른 경우
+        if (!word || word[word.length - 1] === newWord[0]) {
+          //  비어 있다
+          word = newWord; //  입력한 단어가 제시어가 된다
+          $word.textContent = word; //  화면도 바꿔주기
+
+          const order = Number($order.textContent); //  현재 순서를 저장
+          if (order + 1 > number) {
+            $order.textContent = 1;
+          } else {
+            $order.textContent = order + 1;
+          }
+        } else {  //  올바르지 않다
+          alert('올바르지 않은 단어입니다!');
+        }
+        $input.value = "";  //  빈 칸 만들어주기
+          //  input의 내부값 -> value (select, textarea 등 입력값 태그)
+          //  span 등 다른 대부분의 태그 -> textContent
+
+          //    textContent -> script, style등 노드의 모든 요소 가져옴
+          //    innerText -> 사람이 읽을 수 있는 요소만 반환,
+          //                 css를 고려하므로 리플로우 발생
+          //    innerHtml -> HTML로 분석해 반환, XSS에 취약
+        $input.focus();
+      };
+      const onInput = (event) => {
+        newWord = event.target.value;
+      };
+
+      $button.addEventListener('click', onClickButton);
+      $input.addEventListener('input', onInput);
+  </script>
+</body>
+</html>
