@@ -36,8 +36,12 @@
       <td></td>
     </tr>
   </table> -->
+  
+  
 <script>
   const { body } = document;
+
+  
   
   //  구조분해할당(destructuring)
 
@@ -112,6 +116,127 @@
   const rows = [];
   let turn = 'O';
 
+  // rows
+  // [
+  //   [td, td, td],
+  //   [td, td, td],
+  //   [td, td, td],
+  // ]
+
+  const checkWinner = (target) => {
+    let rowIndex = target.parentNode.rowIndex;
+    let cellIndex = target.cellIndex;
+
+    //  td 속성은 자체적으로 cellIndex를 가지고 있어서, 자기가 몇 번째 위치인지 알고 있다.
+    //  row의 인덱스는 tr 속성에 달려있기 때문에, 여기서는 부모요소의 인덱스를 읽어 옴.
+
+    //  위의 index 찾기 방법과 같은 방법을 반복문으로 나타냄
+
+    // rows.forEach((row, ri) => {
+    //   row.forEach((cell, ci) => {
+    //     if (cell === target) {
+    //       rowIndex = ri;
+    //       cellIndex = ci;
+    //     }
+    //   });
+    // });
+
+
+    //  세 칸 다 채워졌는가?
+    let hasWinner = false;
+    //  가로줄 검사
+    if (
+      rows[rowIndex][0].textContent === turn &&
+      rows[rowIndex][1].textContent === turn &&
+      rows[rowIndex][2].textContent === turn
+    ) {
+      hasWinner = true;
+    }
+    //  세로줄 검사
+    if (
+      rows[0][cellIndex].textContent === turn &&
+      rows[1][cellIndex].textContent === turn &&
+      rows[2][cellIndex].textContent === turn
+    )
+    {
+      hasWinner = true;
+    }
+    //  대각선 검사
+    if (
+      rows[0][0].textContent === turn &&
+      rows[1][1].textContent === turn &&
+      rows[2][2].textContent === turn
+    )
+    {
+      hasWinner = true;
+    }
+    if (
+      rows[0][2].textContent === turn &&
+      rows[1][1].textContent === turn &&
+      rows[2][0].textContent === turn
+    ) {
+      hasWinner = true;
+    }
+    return hasWinner;
+  }
+
+  const callback = (event) => {
+    
+    //  event.stopPropagation();  // 이벤트 버블링 방지
+    
+    if (event.target.textContent !== '') { //  칸에 글자가 있나?
+      console.log('빈칸이 아닙니다.');
+      return;
+
+      //  event.currentTarget //  실제 이벤트를 붙인 요소
+      //  event.target 은 실제 target이 누가 될 지 모름. 불명확함
+      
+    }
+    console.log('빈칸입니다.');
+    event.target.textContent = turn;
+
+    //  승부 확인
+    const hasWinner = checkWinner(event.target);
+
+    if (hasWinner) {
+      $result.textContent = `${turn} WIN!`;
+      $table.removeEventListener('click', callback);
+      return;
+    }
+
+    //  무승부 검사
+
+    const draw = rows.flat().every((cell) => cell.textContent);
+
+    //  flat, every
+    //  아래와 같이 2차원 배열을 2중 반복문으로 풀어서 검사하는 것과 같은 효과
+    //  evert > 모두가 참이어야 참 반환. 그러나 1차원 배열에서만 사용 가능
+    //  flat > 배열을 한 차원 낮추어 줌. 2차원 -> 1차원
+
+    // let draw = true;
+    // rows.forEach((row) => {
+    //   row.forEach((cell) => {
+    //     if (!cell.textContent) {  //  모든 칸이 차 있지 않으면...
+    //       draw = false;
+    //     }
+    //   });
+    // });
+
+    
+    //  Q. 다음 배열에서 한 칸이라도 null이 들어 있으면 true, 아니면 false를 출력하도록 해보세요
+
+    // const array = [ 1, 'hello', null, undefined, false ];
+
+    // const some = array.some((value) => value === null);
+    // console.log(some);
+
+
+    if (draw) {
+      $result.textContent = `DRAW!`;
+    }
+    turn = turn === 'X' ? 'O' : 'X';
+  }
+
   //  JS로 table 생성
   for (let i = 0; i < 3; i++) {
     const $tr = document.createElement('tr');
@@ -119,24 +244,34 @@
     for (let j = 0; j < 3; j++) {
       const $td = document.createElement('td');
       cells.push($td);
-      $td.addEventListener('click', (event) => {
-        //  칸에 글자가 있나?
-        if (event.target.textContent) {
-          return;
-        }
-        event.target.textContent = turn;
-        //  승부 확인
-        if (turn === 'O') {
-          turn = 'X';
-        } else if (turn === 'X') {
-          turn = 'O';
-        }
-      });
+      // $td.addEventListener('click', callback);  //  반복문 안에서 callbacak 함수로 별도로 빼내기
       $tr.append($td);
     }
     rows.push(cells);
     $table.append($tr);
   }
+
+  $table.addEventListener('click', callback); //  반복문 안에 있던 이벤트리스너를 꺼내 왔다.
+
+  //  HTML의 특성. 이벤트 버블링. 이벤트가 상위 요소로 타고 올라간다. td클릭 -> tr에서도 클릭 -> 테이블에서 클릭
+  //  만약 이 웹게임에서 O 또는 X 글자 자체를 클릭하는 경우 = td 클릭이 아니므로 이벤트 발생 안해서 동작 안할 수도.
+  //  그러나 이벤트 버블링을 통해, span 태그 등 텍스트를 클릭했음에도 이벤트는 전달되고 원하는 동작 발생
+  //  내가 정말 span태그(글자)에만 이벤트를 넣고, 그 상위 요소들은 관여 안했으면 좋겠다 = span 태그 요소에 stopPropagation() 달아주기
+
+  //  이벤트 캡쳐링: 부모요소 이벤트가 자식에게 내려가는 것.
+  //  팝업창의 백그라운드 클릭 시 팝업이 닫히게 하는 효과 등에 사용.
+  //  보통 팝업의 백그라운드는 팝업의 부모 요소이기 때문에, 부모요소에 이벤트를 발생시켰을 때, 그 자식요소인 팝업이 닫히도록 가능.
+
+  // Q. 버튼 클릭 시 'hello, event bubbling'을 alert하도록 해보세요.  이벤트리스너를 button 태그에 달지 말고!
+
+  // <div class="my-target">
+  //   <button>클릭</button>
+  // </div>
+
+  // body.getElementsByClassName('my-target')[0].addEventListener('click', (event) => {
+  //   alert('hello, event bubbling');
+  // })
+
 
   body.append($table);
   body.append($result);

@@ -468,3 +468,27 @@ const eemo = {
 
 console.log(eemo.name.last);
 console.log(eemo['name']['last']);  //  따옴표에 주의
+
+
+//  유사배열
+//  HTML 요소들은 유사 배열이다. (부모자식간 노드 관계)
+//  예를 들어, $table.children 확인 시,
+//  HTMLCollection(3) [tr, tr, tr] 와 같은 형태로 나타나게 됨.
+//  배열 메서드 사용 불가, for문으로 tr 정보를 가져올 수는 있음.
+
+//  Array.from
+//  Array.from($table.children) 처럼 사용하면, (3) [tr, tr, tr] 와 같이 배열화 되어,
+//  모든 배열 메서드 사용 가능
+
+//  every
+//  1차원 배열에서만 가능
+//  모두 다 true면 true, 하나라도 false면 false 처리하는 메서드.
+//  틱택토 게임에서, 첫 칸이 빈 칸임에도 불구하고 반복문 검사에서는 모든 셀을 다 검사하므로 비효율적
+
+//  flat
+//  2차원 배열을 1차원 배열로 풀어주는 메서드 (배열의 차원을 한 단계 낮춰준다. 3차원 배열 -> 2차원)
+
+//  some
+//  하나라도 true이면 true, 모두 다 false 면 false
+
+//  every, some 은 참 거짓 조건이 판별되는 순간 종료된다. 시간 절약.
