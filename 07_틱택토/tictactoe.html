@@ -180,6 +180,20 @@
     return hasWinner;
   }
 
+  const checkWinnerAndDraw = (target) => {
+    const hasWinner = checkWinner(target);
+    if (hasWinner) {
+      $result.textContent = `${turn} WIN!`;
+      $table.removeEventListener('click', callback);
+      return;
+    }
+    const draw = rows.flat().every((cell) => cell.textContent);
+    if (draw) {
+      $result.textContent = `DRAW!`;
+    }
+    turn = turn === 'X' ? 'O' : 'X';
+  }
+
   const callback = (event) => {
     
     //  event.stopPropagation();  // 이벤트 버블링 방지
@@ -194,19 +208,6 @@
     }
     console.log('빈칸입니다.');
     event.target.textContent = turn;
-
-    //  승부 확인
-    const hasWinner = checkWinner(event.target);
-
-    if (hasWinner) {
-      $result.textContent = `${turn} WIN!`;
-      $table.removeEventListener('click', callback);
-      return;
-    }
-
-    //  무승부 검사
-
-    const draw = rows.flat().every((cell) => cell.textContent);
 
     //  flat, every
     //  아래와 같이 2차원 배열을 2중 반복문으로 풀어서 검사하는 것과 같은 효과
@@ -231,10 +232,13 @@
     // console.log(some);
 
 
-    if (draw) {
-      $result.textContent = `DRAW!`;
+    checkWinnerAndDraw(event.target);
+    if (turn === 'X') {
+      const emptyCells = rows.flat().filter((cell) => !cell.textContent);
+      //  filter() () 안의 조건에 해당하는 요소들만 걸러준다. 1차원 배열에서만 가능
+      const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+      randomCell.textContent = 'X';
     }
-    turn = turn === 'X' ? 'O' : 'X';
   }
 
   //  JS로 table 생성
